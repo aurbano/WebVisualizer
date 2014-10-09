@@ -4,3 +4,10 @@ node_js:
 before_script:
 - npm start &
 - sleep 1
+deploy:
+  provider: heroku
+  api_key:
+    secure: HoD/V6g32cblkqIrqDP2eOIiNsbov1+zbGpCq+CJRf9z8OV8MPgzu6nJJ8wHSSgdm7gCmG4OQ/duRDPodJbmuUe9vTWjwZ37OBBCpJ8+fSqrvDiRSwZ46+9hyC4ydeS1DYzmuxLR1nKYxE3wFT5a0SrW45hN+L23W3k4CFBBni4=
+  app: web-visualizer
+  on:
+    repo: aurbano/WebVisualizer
