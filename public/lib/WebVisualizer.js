@@ -81,7 +81,7 @@ var WebGraph = function (options) {
 	};
 
 	function proxyURL(url) {
-		var url = 'http://localhost:5000/proxy/' + encodeURIComponent(url);
+		var url = '/proxy/' + encodeURIComponent(url);
 		console.log("Loading " + url);
 		return url;
 	}
