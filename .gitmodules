@@ -1,0 +1,3 @@
+[submodule "public/lib/VivaGraphJS"]
+	path = public/lib/VivaGraphJS
+	url = https://github.com/anvaka/VivaGraphJS.git
