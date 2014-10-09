@@ -33,6 +33,7 @@ module.exports = function () {
 		console.log(options.method + ': ' + options.hostname + ':' + options.port + options.path);
 
 		var image_get_request = http.get(options, function (proxy_response) {
+			proxy_response.headers = request_from_client.headers;
 			proxy_response.pipe(response_to_client);
 		});
 		image_get_request.end();
