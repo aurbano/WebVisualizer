@@ -8,10 +8,17 @@ var WebGraph = function (options) {
 		}
 	};
 
+	// Track mouse position
+	var mouse = {
+		x: 0,
+		y: 0
+	};
+
 	// Default settings
 	var settings = {
 		container: null,
-		history: $('#history')
+		history: $('#history'),
+		nodeData: $('#nodeData')
 	};
 	settings = $.extend(settings, options);
 
@@ -27,7 +34,8 @@ var WebGraph = function (options) {
 		addToHistory(website);
 		addNode(website, {
 			favicon: favicon('http://' + website),
-			url: 'http://' + website
+			url: 'http://' + website,
+			description: ''
 		});
 		// Now start searching
 		search(website);
@@ -42,8 +50,8 @@ var WebGraph = function (options) {
 
 		wg.Viva.layout = Viva.Graph.Layout.forceDirected(wg.Viva.graph, {
 			springLength: 80,
-			springCoeff: 0.0004,
-			dragCoeff: 0.05,
+			springCoeff: 0.0001,
+			dragCoeff: 0.01,
 			gravity: -10,
 			theta: 0.5
 		});
@@ -63,7 +71,29 @@ var WebGraph = function (options) {
 			layout: wg.Viva.layout
 		});
 
+		var events = Viva.Graph.webglInputEvents(wg.Viva.graphics, wg.Viva.graph);
+
+		events.mouseEnter(function (node) {
+			showNodeData(node);
+		}).mouseLeave(function (node) {
+			hideNodeData();
+		}).dblClick(function (node) {
+			wg.search(node.id);
+		}).click(function (node) {});
+
 		wg.Viva.renderer.run();
+
+		// Track mouse movement
+		$(document).mousemove(function (event) {
+			mouse.x = event.pageX;
+			mouse.y = event.pageY;
+
+			// Move nodeData
+			settings.nodeData.offset({
+				top: mouse.y + 5,
+				left: mouse.x + 5
+			});
+		});
 	};
 
 	function search(query) {
@@ -92,6 +122,17 @@ var WebGraph = function (options) {
 		wg.Viva.graph.addLink(from, to);
 	}
 
+	function showNodeData(node) {
+		settings.nodeData.find('img').attr('src', favicon(node.data.favicon));
+		settings.nodeData.find('.name').text(node.id);
+		settings.nodeData.find('.description').text(node.data.description.substring(0, 100) + '...');
+		settings.nodeData.show();
+	}
+
+	function hideNodeData() {
+		settings.nodeData.hide();
+	}
+
 	function addToHistory(search) {
 		settings.history.append('<li>' + search + '</li>');
 	}
@@ -104,6 +145,13 @@ var WebGraph = function (options) {
 	function favicon(website) {
 		var faviconApp = 'http://getfavicon.appspot.com/';
 		return faviconApp + website;
+	}
+
+	function addhttp($url) {
+		if (!preg_match("~^(?:f|ht)tps?://~i", $url)) {
+			$url = "http://".$url;
+		}
+		return $url;
 	}
 
 	return wg;
