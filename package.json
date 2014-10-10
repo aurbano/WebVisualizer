@@ -24,7 +24,9 @@
   },
   "homepage": "https://github.com/aurbano/WebVisualizer",
   "dependencies": {
-    "express": "^4.9.6"
+    "express": "^4.9.6",
+    "request": "^2.45.0",
+    "favicon": "0.0.2"
   },
   "devDependencies": {
     "mocha": "^1.21.4",

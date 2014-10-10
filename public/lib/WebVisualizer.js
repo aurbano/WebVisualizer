@@ -1,9 +1,17 @@
 var WebGraph = function (options) {
-	var wg = {};
+	var wg = {
+		Viva: {
+			graph: null,
+			graphics: null,
+			layout: null,
+			renderer: null
+		}
+	};
 
 	// Default settings
 	var settings = {
-		container: null
+		container: null,
+		history: $('#history')
 	};
 	settings = $.extend(settings, options);
 
@@ -12,78 +20,90 @@ var WebGraph = function (options) {
 		return false;
 	}
 
-	wg.start = function (website) {
-		$(document).ready(function () {
-			console.log("Starting with web=" + website);
-			wg.render();
+	init();
+
+	wg.search = function (website) {
+		console.info("Starting Graph for " + website);
+		addToHistory(website);
+		addNode(website, {
+			favicon: favicon('http://' + website),
+			url: 'http://' + website
 		});
+		// Now start searching
+		search(website);
 	};
 
-	wg.render = function () {
-		console.info("Starting graph");
+	// ------------------------------------- //
+	//          INTERNAL FUNCTIONS           //
+	// ------------------------------------- //         
 
-		var graph = Viva.Graph.graph();
+	function init() {
+		wg.Viva.graph = Viva.Graph.graph();
 
-		// Construct the graph
-		graph.addNode('anvaka', {
-			url: 'https://secure.gravatar.com/avatar/91bad8ceeec43ae303790f8fe238164b'
-		});
-		graph.addNode('manunt', {
-			url: 'https://secure.gravatar.com/avatar/c81bfc2cf23958504617dd4fada3afa8'
-		});
-		graph.addNode('thlorenz', {
-			url: 'https://secure.gravatar.com/avatar/1c9054d6242bffd5fd25ec652a2b79cc'
-		});
-		graph.addNode('bling', {
-			url: 'https://secure.gravatar.com/avatar/24a5b6e62e9a486743a71e0a0a4f71af'
-		});
-		graph.addNode('diyan', {
-			url: 'https://secure.gravatar.com/avatar/01bce7702975191fdc402565bd1045a8?'
-		});
-		graph.addNode('pocheptsov', {
-			url: 'https://secure.gravatar.com/avatar/13da974fc9716b42f5d62e3c8056c718'
-		});
-		graph.addNode('dimapasko', {
-			url: 'https://secure.gravatar.com/avatar/8e587a4232502a9f1ca14e2810e3c3dd'
-		});
-
-		graph.addLink('anvaka', 'manunt');
-		graph.addLink('anvaka', 'thlorenz');
-		graph.addLink('anvaka', 'bling');
-		graph.addLink('anvaka', 'diyan');
-		graph.addLink('anvaka', 'pocheptsov');
-		graph.addLink('anvaka', 'dimapasko');
-
-		var layout = Viva.Graph.Layout.forceDirected(graph, {
+		wg.Viva.layout = Viva.Graph.Layout.forceDirected(wg.Viva.graph, {
 			springLength: 80,
 			springCoeff: 0.0004,
 			dragCoeff: 0.05,
-			gravity: -50,
+			gravity: -10,
 			theta: 0.5
 		});
 
 		// Set custom nodes appearance
-		var graphics = Viva.Graph.View.webglGraphics();
+		wg.Viva.graphics = Viva.Graph.View.webglGraphics();
 
-		graphics.setNodeProgram(Viva.Graph.View.webglImageNodeProgram());
+		wg.Viva.graphics.setNodeProgram(Viva.Graph.View.webglImageNodeProgram());
 
-		graphics.node(function (node) {
-			return new Viva.Graph.View.webglImage(20, proxyURL(node.data.url));
+		wg.Viva.graphics.node(function (node) {
+			return new Viva.Graph.View.webglImage(20, proxyURL(node.data.favicon));
 		});
 
-		var renderer = Viva.Graph.View.renderer(graph, {
+		wg.Viva.renderer = Viva.Graph.View.renderer(wg.Viva.graph, {
 			container: settings.container.get(0),
-			graphics: graphics,
-			layout: layout
+			graphics: wg.Viva.graphics,
+			layout: wg.Viva.layout
 		});
 
-		renderer.run();
+		wg.Viva.renderer.run();
 	};
+
+	function search(query) {
+		$.get("/search", {
+			query: 'related: ' + query
+		}).done(function (data) {
+			console.log("Data Loaded: ", data);
+			var total = data.length;
+			for (var i = 0; i < total; i++) {
+				addNode(data[i].DisplayUrl, {
+					favicon: favicon(data[i].Url),
+					url: data[i].Url,
+					description: data[i].Description
+				});
+
+				addLink(query, data[i].DisplayUrl)
+			}
+		});
+	}
+
+	function addNode(name, data) {
+		wg.Viva.graph.addNode(name, data);
+	}
+
+	function addLink(from, to) {
+		wg.Viva.graph.addLink(from, to);
+	}
+
+	function addToHistory(search) {
+		settings.history.append('<li>' + search + '</li>');
+	}
 
 	function proxyURL(url) {
 		var url = '/proxy/' + encodeURIComponent(url);
-		console.log("Loading " + url);
 		return url;
+	}
+
+	function favicon(website) {
+		var faviconApp = 'http://getfavicon.appspot.com/';
+		return faviconApp + website;
 	}
 
 	return wg;
